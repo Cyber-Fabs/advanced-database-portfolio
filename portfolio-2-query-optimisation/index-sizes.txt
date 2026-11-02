@@ -1,0 +1,7 @@
+          index_name          |  size  
+------------------------------+--------
+ idx_appointments_patient_id  | 272 kB
+ idx_patients_last_first_name | 56 kB
+ idx_invoices_unpaid_amount   | 96 kB
+(3 rows)
+
