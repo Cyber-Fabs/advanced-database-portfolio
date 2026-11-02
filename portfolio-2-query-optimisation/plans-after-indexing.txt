@@ -1,0 +1,129 @@
+=== Existing indexes ===
+                                               List of indexes
+ Schema |                             Name                             | Type  | Owner  |       Table        
+--------+--------------------------------------------------------------+-------+--------+--------------------
+ public | appointments_doctor_id_appointment_date_appointment_time_key | index | favour | appointments
+ public | appointments_pkey                                            | index | favour | appointments
+ public | consultations_appointment_id_key                             | index | favour | consultations
+ public | consultations_pkey                                           | index | favour | consultations
+ public | departments_name_key                                         | index | favour | departments
+ public | departments_pkey                                             | index | favour | departments
+ public | doctors_phone_key                                            | index | favour | doctors
+ public | doctors_pkey                                                 | index | favour | doctors
+ public | idx_appointments_patient_id                                  | index | favour | appointments
+ public | idx_invoices_unpaid_amount                                   | index | favour | invoices
+ public | idx_patients_last_first_name                                 | index | favour | patients
+ public | invoices_pkey                                                | index | favour | invoices
+ public | lab_requests_pkey                                            | index | favour | lab_requests
+ public | lab_tests_pkey                                               | index | favour | lab_tests
+ public | lab_tests_test_name_key                                      | index | favour | lab_tests
+ public | medications_name_key                                         | index | favour | medications
+ public | medications_pkey                                             | index | favour | medications
+ public | patients_phone_key                                           | index | favour | patients
+ public | patients_pkey                                                | index | favour | patients
+ public | payments_pkey                                                | index | favour | payments
+ public | prescription_items_pkey                                      | index | favour | prescription_items
+ public | prescriptions_pkey                                           | index | favour | prescriptions
+(22 rows)
+
+=== Q1: Patient visit history ===
+                                                                                  QUERY PLAN                                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=53.48..53.49 rows=4 width=49) (actual time=0.117..0.118 rows=5.00 loops=1)
+   Sort Key: a.appointment_date
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=23 read=2
+   ->  Nested Loop  (cost=4.60..53.44 rows=4 width=49) (actual time=0.098..0.106 rows=5.00 loops=1)
+         Join Filter: (a.doctor_id = d.doctor_id)
+         Rows Removed by Join Filter: 45
+         Buffers: shared hit=20 read=2
+         ->  Seq Scan on doctors d  (cost=0.00..1.10 rows=10 width=16) (actual time=0.002..0.003 rows=10.00 loops=1)
+               Buffers: shared hit=1
+         ->  Materialize  (cost=4.60..51.73 rows=4 width=21) (actual time=0.005..0.009 rows=5.00 loops=10)
+               Storage: Memory  Maximum Storage: 17kB
+               Buffers: shared hit=19 read=2
+               ->  Nested Loop Left Join  (cost=4.60..51.71 rows=4 width=21) (actual time=0.044..0.085 rows=5.00 loops=1)
+                     Buffers: shared hit=19 read=2
+                     ->  Bitmap Heap Scan on appointments a  (cost=4.32..18.49 rows=4 width=12) (actual time=0.035..0.047 rows=5.00 loops=1)
+                           Recheck Cond: (patient_id = 1234)
+                           Heap Blocks: exact=5
+                           Buffers: shared hit=5 read=2
+                           ->  Bitmap Index Scan on idx_appointments_patient_id  (cost=0.00..4.32 rows=4 width=0) (actual time=0.027..0.027 rows=5.00 loops=1)
+                                 Index Cond: (patient_id = 1234)
+                                 Index Searches: 1
+                                 Buffers: shared read=2
+                     ->  Index Scan using consultations_appointment_id_key on consultations c  (cost=0.29..8.30 rows=1 width=17) (actual time=0.007..0.007 rows=0.80 loops=5)
+                           Index Cond: (appointment_id = a.appointment_id)
+                           Index Searches: 5
+                           Buffers: shared hit=14
+ Planning:
+   Buffers: shared hit=291 read=1
+ Planning Time: 1.119 ms
+ Execution Time: 0.144 ms
+(31 rows)
+
+=== Q2: Doctor schedule for one day ===
+                                                                                   QUERY PLAN                                                                                   
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=54.02..54.06 rows=16 width=21) (actual time=0.034..0.035 rows=16.00 loops=1)
+   Sort Key: appointment_time
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=9
+   ->  Bitmap Heap Scan on appointments  (cost=4.45..53.70 rows=16 width=21) (actual time=0.022..0.026 rows=16.00 loops=1)
+         Recheck Cond: ((doctor_id = 3) AND (appointment_date = '2025-03-10'::date))
+         Heap Blocks: exact=2
+         Buffers: shared hit=4
+         ->  Bitmap Index Scan on appointments_doctor_id_appointment_date_appointment_time_key  (cost=0.00..4.45 rows=16 width=0) (actual time=0.016..0.016 rows=16.00 loops=1)
+               Index Cond: ((doctor_id = 3) AND (appointment_date = '2025-03-10'::date))
+               Index Searches: 1
+               Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=10
+ Planning Time: 0.040 ms
+ Execution Time: 0.041 ms
+(16 rows)
+
+=== Q3: Find patient by name ===
+                                                                   QUERY PLAN                                                                   
+------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=4.83..14.09 rows=10 width=27) (actual time=0.042..0.055 rows=10.00 loops=1)
+   Buffers: shared hit=7 read=2
+   ->  Bitmap Heap Scan on patients  (cost=4.83..53.93 rows=53 width=27) (actual time=0.041..0.053 rows=10.00 loops=1)
+         Recheck Cond: (((last_name)::text = 'Okafor'::text) AND ((first_name)::text = 'Chioma'::text))
+         Heap Blocks: exact=6
+         Buffers: shared hit=7 read=2
+         ->  Bitmap Index Scan on idx_patients_last_first_name  (cost=0.00..4.81 rows=53 width=0) (actual time=0.033..0.033 rows=52.00 loops=1)
+               Index Cond: (((last_name)::text = 'Okafor'::text) AND ((first_name)::text = 'Chioma'::text))
+               Index Searches: 1
+               Buffers: shared read=2
+ Planning:
+   Buffers: shared hit=57 read=1
+ Planning Time: 0.289 ms
+ Execution Time: 0.061 ms
+(14 rows)
+
+=== Q6: Unpaid invoices with patient phone numbers ===
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.57..5.86 rows=10 width=35) (actual time=0.032..0.103 rows=10.00 loops=1)
+   Buffers: shared hit=40 read=2
+   ->  Nested Loop  (cost=0.57..1415.94 rows=2676 width=35) (actual time=0.031..0.102 rows=10.00 loops=1)
+         Buffers: shared hit=40 read=2
+         ->  Index Scan using idx_invoices_unpaid_amount on invoices i  (cost=0.28..484.41 rows=2676 width=16) (actual time=0.022..0.045 rows=10.00 loops=1)
+               Index Searches: 1
+               Buffers: shared hit=10 read=2
+         ->  Memoize  (cost=0.29..0.40 rows=1 width=27) (actual time=0.005..0.005 rows=1.00 loops=10)
+               Cache Key: i.patient_id
+               Cache Mode: logical
+               Hits: 0  Misses: 10  Evictions: 0  Overflows: 0  Memory Usage: 2kB
+               Buffers: shared hit=30
+               ->  Index Scan using patients_pkey on patients p  (cost=0.28..0.39 rows=1 width=27) (actual time=0.004..0.004 rows=1.00 loops=10)
+                     Index Cond: (patient_id = i.patient_id)
+                     Index Searches: 10
+                     Buffers: shared hit=30
+ Planning:
+   Buffers: shared hit=74 read=1
+ Planning Time: 0.422 ms
+ Execution Time: 0.114 ms
+(20 rows)
+
