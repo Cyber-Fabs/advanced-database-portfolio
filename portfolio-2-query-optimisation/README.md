@@ -50,3 +50,4 @@ Q3 shows that an index does not always produce a large gain. Because the query s
 ## Trade-offs and limitations
 - Every index uses extra storage (see `index-sizes.txt`) and slows down inserts and updates, because the index must be updated too. Indexes should only be added for frequent queries.
 - Timings are from single runs on a small dataset held in memory, so they vary slightly between runs. The plan changes (Seq Scan to index scan) are more reliable evidence than the exact milliseconds.
+- Q1 still uses a `Seq Scan on doctors` after indexing. This is expected: with only 10 doctors, reading the whole table is cheaper than an index lookup. The PostgreSQL planner chooses plans by estimated cost, not simply because an index exists.
