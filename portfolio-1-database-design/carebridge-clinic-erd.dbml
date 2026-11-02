@@ -1,5 +1,92 @@
-pbpaste > portfolio-1-database-design/carebridge-clinic-erd.dbml
-wc -l portfolio-1-database-design/carebridge-clinic-erd.dbml
-git add .
-git commit -m "Fix DBML file with full diagram code"
-git push
+Table departments {
+  department_id int [pk, increment]
+  name varchar [not null, unique]
+  location varchar
+}
+
+Table doctors {
+  doctor_id int [pk, increment]
+  first_name varchar [not null]
+  last_name varchar [not null]
+  specialty varchar
+  phone varchar [unique]
+  department_id int [ref: > departments.department_id]
+}
+
+Table patients {
+  patient_id int [pk, increment]
+  first_name varchar [not null]
+  last_name varchar [not null]
+  date_of_birth date [not null]
+  gender varchar
+  phone varchar [unique]
+  blood_group varchar
+}
+
+Table appointments {
+  appointment_id int [pk, increment]
+  patient_id int [ref: > patients.patient_id]
+  doctor_id int [ref: > doctors.doctor_id]
+  appointment_date date [not null]
+  appointment_time time [not null]
+  status varchar
+}
+
+Table consultations {
+  consultation_id int [pk, increment]
+  appointment_id int [unique, ref: - appointments.appointment_id]
+  symptoms text
+  diagnosis text
+}
+
+Table medications {
+  medication_id int [pk, increment]
+  name varchar [not null]
+  unit_price decimal
+}
+
+Table prescriptions {
+  prescription_id int [pk, increment]
+  consultation_id int [ref: > consultations.consultation_id]
+  date_issued date
+}
+
+Table prescription_items {
+  prescription_id int [ref: > prescriptions.prescription_id]
+  medication_id int [ref: > medications.medication_id]
+  dosage varchar
+  quantity int
+  indexes {
+    (prescription_id, medication_id) [pk]
+  }
+}
+
+Table lab_tests {
+  test_id int [pk, increment]
+  test_name varchar [not null]
+  price decimal
+}
+
+Table lab_requests {
+  request_id int [pk, increment]
+  consultation_id int [ref: > consultations.consultation_id]
+  test_id int [ref: > lab_tests.test_id]
+  result text
+  result_date date
+}
+
+Table invoices {
+  invoice_id int [pk, increment]
+  patient_id int [ref: > patients.patient_id]
+  invoice_date date
+  total_amount decimal
+  status varchar
+}
+
+Table payments {
+  payment_id int [pk, increment]
+  invoice_id int [ref: > invoices.invoice_id]
+  amount decimal [not null]
+  payment_method varchar
+  payment_date date
+}
