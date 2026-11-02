@@ -1,0 +1,96 @@
+--- Q1: Full visit history for one patient (doctor seen and diagnosis) ---
+ appointment_date |     doctor      | diagnosis 
+------------------+-----------------+-----------
+ 2025-01-19       | Ibrahim Musa    | Malaria
+ 2025-02-25       | Fatima Bello    | Healthy
+ 2025-03-02       | Funmilayo Ojo   | Malaria
+ 2025-03-09       | Chukwuemeka Obi | 
+ 2025-03-24       | Tunde Adeyemi   | Malaria
+(5 rows)
+
+--- Q2: One doctor's schedule for a given day ---
+ appointment_time | patient_id |  status   
+------------------+------------+-----------
+ 08:00:00         |       3940 | Cancelled
+ 08:30:00         |       3783 | Completed
+ 09:00:00         |        285 | Completed
+ 09:30:00         |         58 | No-show
+ 10:00:00         |       3851 | Completed
+ 10:30:00         |       2417 | Completed
+ 11:00:00         |       1100 | No-show
+ 11:30:00         |       4321 | Completed
+ 12:00:00         |       2003 | Cancelled
+ 12:30:00         |       2720 | Completed
+ 13:00:00         |       4516 | Completed
+ 13:30:00         |       2755 | Completed
+ 14:00:00         |       1581 | Cancelled
+ 14:30:00         |       4675 | Completed
+ 15:00:00         |        687 | Cancelled
+ 15:30:00         |        434 | Cancelled
+(16 rows)
+
+--- Q3: Find a patient by name at the front desk ---
+ patient_id | first_name | last_name |    phone    
+------------+------------+-----------+-------------
+         62 | Chioma     | Okafor    | 09050000062
+         90 | Chioma     | Okafor    | 09050000090
+        191 | Chioma     | Okafor    | 09050000191
+        199 | Chioma     | Okafor    | 09050000199
+        288 | Chioma     | Okafor    | 09050000288
+        359 | Chioma     | Okafor    | 09050000359
+        435 | Chioma     | Okafor    | 09050000435
+        602 | Chioma     | Okafor    | 09050000602
+        631 | Chioma     | Okafor    | 09050000631
+        775 | Chioma     | Okafor    | 09050000775
+(10 rows)
+
+--- Q4: Top 5 diagnoses ---
+          diagnosis          | cases 
+-----------------------------+-------
+ Upper respiratory infection |  1991
+ Healthy                     |  1971
+ Gastroenteritis             |  1949
+ Anaemia                     |  1933
+ Type 2 diabetes             |  1887
+(5 rows)
+
+--- Q5: Monthly revenue by payment method ---
+   month    | payment_method |   revenue   
+------------+----------------+-------------
+ 2025-01-01 | Card           | 16302300.43
+ 2025-01-01 | Cash           | 15845874.18
+ 2025-01-01 | HMO            | 14580372.34
+ 2025-01-01 | Transfer       | 16640995.07
+ 2025-02-01 | Card           | 15774055.33
+ 2025-02-01 | Cash           | 14489174.22
+ 2025-02-01 | HMO            | 14857172.27
+ 2025-02-01 | Transfer       | 14956262.14
+ 2025-03-01 | Card           | 16046182.70
+ 2025-03-01 | Cash           | 16370930.58
+ 2025-03-01 | HMO            | 16177502.77
+ 2025-03-01 | Transfer       | 16016346.46
+ 2025-04-01 | Card           | 14608267.68
+ 2025-04-01 | Cash           | 15675122.31
+ 2025-04-01 | HMO            | 15888375.52
+ 2025-04-01 | Transfer       | 15604978.80
+ 2025-05-01 | Card           |  2778646.11
+ 2025-05-01 | Cash           |  2404138.51
+ 2025-05-01 | HMO            |  2716108.28
+ 2025-05-01 | Transfer       |  2600433.80
+(20 rows)
+
+--- Q6: Unpaid invoices with patient phone numbers (for follow-up calls) ---
+ invoice_id | first_name | last_name |    phone    | total_amount 
+------------+------------+-----------+-------------+--------------
+       8190 | Aisha      | Ojo       | 09050000547 |     49986.74
+       1332 | Aisha      | Musa      | 09050001955 |     49961.13
+       6534 | Funke      | Obi       | 09050003238 |     49959.04
+       7431 | Aisha      | Nwosu     | 09050004252 |     49918.44
+       8337 | David      | Eze       | 09050000419 |     49892.94
+      11608 | David      | Adeyemi   | 09050002136 |     49883.66
+        598 | Blessing   | Adeyemi   | 09050004048 |     49865.32
+       7287 | Emeka      | Okafor    | 09050003810 |     49859.34
+       4249 | Funke      | Adeyemi   | 09050001273 |     49857.50
+       2526 | Aisha      | Ojo       | 09050004167 |     49856.92
+(10 rows)
+
