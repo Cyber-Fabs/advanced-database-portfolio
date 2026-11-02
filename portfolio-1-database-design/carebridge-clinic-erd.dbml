@@ -1,1 +1,5 @@
 pbpaste > portfolio-1-database-design/carebridge-clinic-erd.dbml
+wc -l portfolio-1-database-design/carebridge-clinic-erd.dbml
+git add .
+git commit -m "Fix DBML file with full diagram code"
+git push
