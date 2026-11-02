@@ -1,0 +1,104 @@
+-- CareBridge clinic: transaction demonstrations (Portfolio 3, Part A)
+-- Clean up previous demo runs so the script can be rerun
+DELETE FROM appointments WHERE appointment_date >= DATE '2025-06-01';
+DELETE 0
+-- DEMO 1: COMMIT - book an appointment and record its consultation as one unit
+BEGIN;
+BEGIN
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (1, 1, DATE '2025-06-02', TIME '09:00', 'Completed');
+INSERT 0 1
+INSERT INTO consultations (appointment_id, symptoms, diagnosis)
+SELECT appointment_id, 'Fever and headache', 'Malaria' FROM appointments
+WHERE doctor_id = 1 AND appointment_date = DATE '2025-06-02' AND appointment_time = TIME '09:00';
+INSERT 0 1
+COMMIT;
+COMMIT
+SELECT a.appointment_id, a.status, c.diagnosis
+FROM appointments a JOIN consultations c USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+ appointment_id |  status   | diagnosis 
+----------------+-----------+-----------
+          20001 | Completed | Malaria
+(1 row)
+
+-- DEMO 2: ROLLBACK - a card payment is declined, so all changes are undone
+SELECT invoice_id, status, total_amount FROM invoices WHERE invoice_id = 8190;
+ invoice_id | status | total_amount 
+------------+--------+--------------
+       8190 | Unpaid |     49986.74
+(1 row)
+
+BEGIN;
+BEGIN
+INSERT INTO payments (invoice_id, amount, payment_method) VALUES (8190, 49986.74, 'Card');
+INSERT 0 1
+UPDATE invoices SET status = 'Paid' WHERE invoice_id = 8190;
+UPDATE 1
+SELECT invoice_id, status FROM invoices WHERE invoice_id = 8190;
+ invoice_id | status 
+------------+--------
+       8190 | Paid
+(1 row)
+
+ROLLBACK;
+ROLLBACK
+SELECT invoice_id, status FROM invoices WHERE invoice_id = 8190;
+ invoice_id | status 
+------------+--------
+       8190 | Unpaid
+(1 row)
+
+SELECT COUNT(*) AS payments_for_8190 FROM payments WHERE invoice_id = 8190;
+ payments_for_8190 
+-------------------
+                 0
+(1 row)
+
+-- DEMO 3: An error aborts the whole transaction (atomicity)
+-- The second insert tries to double-book Dr 1 at 09:00, which breaks the UNIQUE rule
+BEGIN;
+BEGIN
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (2, 1, DATE '2025-06-02', TIME '10:00', 'Scheduled');
+INSERT 0 1
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (3, 1, DATE '2025-06-02', TIME '09:00', 'Scheduled');
+psql:portfolio-3-transactions-concurrency/transaction-demos.sql:33: ERROR:  duplicate key value violates unique constraint "appointments_doctor_id_appointment_date_appointment_time_key"
+DETAIL:  Key (doctor_id, appointment_date, appointment_time)=(1, 2025-06-02, 09:00:00) already exists.
+SELECT 'this will not run' AS note;
+psql:portfolio-3-transactions-concurrency/transaction-demos.sql:34: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK;
+ROLLBACK
+SELECT appointment_time, patient_id FROM appointments WHERE appointment_date = DATE '2025-06-02';
+ appointment_time | patient_id 
+------------------+------------
+ 09:00:00         |          1
+(1 row)
+
+-- DEMO 4: SAVEPOINT - keep the valid lab request, undo only the faulty one
+BEGIN;
+BEGIN
+INSERT INTO lab_requests (consultation_id, test_id)
+SELECT c.consultation_id, 2 FROM consultations c JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+INSERT 0 1
+SAVEPOINT before_second_test;
+SAVEPOINT
+INSERT INTO lab_requests (consultation_id, test_id)
+SELECT c.consultation_id, 99 FROM consultations c JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+psql:portfolio-3-transactions-concurrency/transaction-demos.sql:46: ERROR:  insert or update on table "lab_requests" violates foreign key constraint "lab_requests_test_id_fkey"
+DETAIL:  Key (test_id)=(99) is not present in table "lab_tests".
+ROLLBACK TO SAVEPOINT before_second_test;
+ROLLBACK
+COMMIT;
+COMMIT
+SELECT lr.request_id, t.test_name FROM lab_requests lr JOIN lab_tests t USING (test_id)
+JOIN consultations c USING (consultation_id) JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+ request_id |       test_name       
+------------+-----------------------
+       5372 | Malaria Parasite Test
+(1 row)
+
