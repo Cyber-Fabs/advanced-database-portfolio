@@ -1,8 +1,8 @@
 # Advanced Database Systems Portfolio: CareBridge Specialist Clinic
 
-**Course:** MIT 8103 Advanced Database Systems, MIVA Open University
-**Student:** Favour Segun Fabuyi (Student ID 301906467)
-**Session:** 2026/2027, First Semester
+- **Course:** MIT 8103 Advanced Database Systems, MIVA Open University
+- **Student:** Favour Segun Fabuyi (Student ID 301906467)
+- **Session:** 2026/2027, First Semester
 
 ## Case study
 **CareBridge Specialist Clinic, Abuja** is a simulated outpatient clinic with general and specialist consultations, an on-site laboratory and a pharmacy. The database supports patient registration, appointment booking, consultations and diagnoses, prescriptions, lab results, invoicing and payments. Full details: [case-study.md](case-study.md).
