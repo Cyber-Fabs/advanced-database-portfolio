@@ -1,0 +1,26 @@
+=== 1. Replica set membership ===
+MongoDB version: 8.0.36
+Replica set name: atlas-tyo2lx-shard-0
+Nodes in the replica set:
+  ac-frvytpn-shard-00-00.alfjtbi.mongodb.net:27017
+  ac-frvytpn-shard-00-01.alfjtbi.mongodb.net:27017
+  ac-frvytpn-shard-00-02.alfjtbi.mongodb.net:27017
+Current primary: ac-frvytpn-shard-00-01.alfjtbi.mongodb.net:27017
+=== 2. Which node serves a read? ===
+readPreference primary   -> served by ac-frvytpn-shard-00-01.alfjtbi.mongodb.net
+readPreference secondary -> served by ac-frvytpn-shard-00-00.alfjtbi.mongodb.net
+=== 3. Write concern: confirmed by 1 node vs a majority of nodes ===
+Average ms per write, w: 1        -> 156.1
+Average ms per write, w: majority -> 170.9
+Test documents written: 40
+=== 4. Read concern majority: only data confirmed by most nodes ===
+[
+  {
+    _id: 'P0001',
+    name: {
+      first: 'Chioma',
+      last: 'Okafor'
+    },
+    phone: '09050000001'
+  }
+]
