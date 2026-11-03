@@ -1,0 +1,1292 @@
+Last login: Mon Nov  2 08:13:46 on ttys001
+favour@Fabuyis-MacBook-Air ~ % psql --version
+zsh: command not found: psql
+favour@Fabuyis-MacBook-Air ~ % ls /Applications/Postgres.app
+ls: /Applications/Postgres.app: No such file or directory
+favour@Fabuyis-MacBook-Air ~ % ls ~/Downloads | grep -i postgres
+favour@Fabuyis-MacBook-Air ~ % open ~/Downloads/Postgres*.dmg
+zsh: no matches found: /Users/favour/Downloads/Postgres*.dmg
+favour@Fabuyis-MacBook-Air ~ % open https://postgresapp.com/downloads.html
+favour@Fabuyis-MacBook-Air ~ % ls ~/Downloads | grep -i postgres
+Postgres-2.9.6-18.dmg.download
+favour@Fabuyis-MacBook-Air ~ % open ~/Downloads/Postgres*.dmg
+zsh: no matches found: /Users/favour/Downloads/Postgres*.dmg
+favour@Fabuyis-MacBook-Air ~ % ls ~/Downloads | grep -i postgres
+Postgres-2.9.6-18.dmg
+favour@Fabuyis-MacBook-Air ~ % open ~/Downloads/Postgres-2.9.6-18.dmg
+favour@Fabuyis-MacBook-Air ~ % sudo mkdir -p /etc/paths.d && echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp
+Password:
+/Applications/Postgres.app/Contents/Versions/latest/bin
+favour@Fabuyis-MacBook-Air ~ % psql --version
+psql (PostgreSQL) 18.6 (Postgres.app)
+favour@Fabuyis-MacBook-Air ~ % cd ~/Documents/advanced-database-portfolio
+createdb carebridge_clinic
+createdb: error: connection to server on socket "/tmp/.s.PGSQL.5432" failed: No such file or directory
+	Is the server running locally and accepting connections on that socket?
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % createdb carebridge_clinic
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % createdb carebridge_clinic
+createdb: error: database creation failed: ERROR:  database "carebridge_clinic" already exists
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -f portfolio-1-database-design/carebridge-schema.sql
+psql: error: portfolio-1-database-design/carebridge-schema.sql: No such file or directory
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat > portfolio-1-database-design/carebridge-schema.sql << 'EOF'
+-- CareBridge Specialist Clinic: relational schema (PostgreSQL)
+
+DROP TABLE IF EXISTS payments, invoices, lab_requests, lab_tests, prescription_items,
+  prescriptions, medications, consultations, appointments, patients, doctors, departments CASCADE;
+
+CREATE TABLE departments (
+  department_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name          VARCHAR(100) NOT NULL UNIQUE,
+  location      VARCHAR(100)
+);
+
+CREATE TABLE doctors (
+  doctor_id     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  first_name    VARCHAR(50) NOT NULL,
+  last_name     VARCHAR(50) NOT NULL,
+  specialty     VARCHAR(100),
+  phone         VARCHAR(20) UNIQUE,
+  department_id INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT
+);
+
+CREATE TABLE patients (
+  patient_id    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  first_name    VARCHAR(50) NOT NULL,
+  last_name     VARCHAR(50) NOT NULL,
+  date_of_birth DATE NOT NULL CHECK (date_of_birth > DATE '1900-01-01'),
+  gender        VARCHAR(10) CHECK (gender IN ('Male', 'Female')),
+  phone         VARCHAR(20) UNIQUE,
+  blood_group   VARCHAR(3) CHECK (blood_group IN ('A+','A-','B+','B-','AB+','AB-','O+','O-'))
+);
+
+CREATE TABLE appointments (
+  appointment_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  patient_id       INT NOT NULL REFERENCES patients(patient_id) ON DELETE RESTRICT,
+  doctor_id        INT NOT NULL REFERENCES doctors(doctor_id) ON DELETE RESTRICT,
+  appointment_date DATE NOT NULL,
+  appointment_time TIME NOT NULL,
+  status           VARCHAR(20) NOT NULL DEFAULT 'Scheduled'
+                   CHECK (status IN ('Scheduled', 'Completed', 'Cancelled', 'No-show')),
+  UNIQUE (doctor_id, appointment_date, appointment_time)
+);
+
+CREATE TABLE consultations (
+  consultation_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  appointment_id  INT NOT NULL UNIQUE REFERENCES appointments(appointment_id) ON DELETE CASCADE,
+  symptoms        TEXT,
+  diagnosis       TEXT
+);
+
+CREATE TABLE medications (
+  medication_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name          VARCHAR(100) NOT NULL UNIQUE,
+  unit_price    NUMERIC(10,2) NOT NULL CHECK (unit_price >= 0)
+);
+
+CREATE TABLE prescriptions (
+  prescription_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  consultation_id INT NOT NULL REFERENCES consultations(consultation_id) ON DELETE CASCADE,
+  date_issued     DATE NOT NULL DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE prescription_items (
+  prescription_id INT NOT NULL REFERENCES prescriptions(prescription_id) ON DELETE CASCADE,
+  medication_id   INT NOT NULL REFERENCES medications(medication_id) ON DELETE RESTRICT,
+  dosage          VARCHAR(100) NOT NULL,
+  quantity        INT NOT NULL CHECK (quantity > 0),
+  PRIMARY KEY (prescription_id, medication_id)
+);
+
+CRE
+heredoc> psql -d carebridge_clinic -f portfolio-1-database-design/carebridge-schema.sql
+heredoc> psql -d carebridge_clinic -c "\dt"
+heredoc> cat > portfolio-1-database-design/carebridge-schema.sql << 'EOF'
+-- CareBridge Specialist Clinic: relational schema (PostgreSQL)
+
+DROP TABLE IF EXISTS payments, invoices, lab_requests, lab_tests, prescription_items,
+  prescriptions, medications, consultations, appointments, patients, doctors, departments CASCADE;
+
+CREATE TABLE departments (
+  department_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name          VARCHAR(100) NOT NULL UNIQUE,
+  location      VARCHAR(100)
+);
+
+CREATE TABLE doctors (
+  doctor_id     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  first_name    VARCHAR(50) NOT NULL,
+  last_name     VARCHAR(50) NOT NULL,
+  specialty     VARCHAR(100),
+  phone         VARCHAR(20) UNIQUE,
+  department_id INT NOT NULL REFERENCES departments(department_id) ON DELETE RESTRICT
+);
+
+CREATE TABLE patients (
+  patient_id    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  first_name    VARCHAR(50) NOT NULL,
+  last_name     VARCHAR(50) NOT NULL,
+  date_of_birth DATE NOT NULL CHECK (date_of_birth > DATE '1900-01-01'),
+  gender        VARCHAR(10) CHECK (gender IN ('Male', 'Female')),
+  phone         VARCHAR(20) UNIQUE,
+  blood_group   VARCHAR(3) CHECK (blood_group IN ('A+','A-','B+','B-','AB+','AB-','O+','O-'))
+);
+
+CREATE TABLE appointments (
+  appointment_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  patient_id       INT NOT NULL REFERENCES patients(patient_id) ON DELETE RESTRICT,
+  doctor_id        INT NOT NULL REFERENCES doctors(doctor_id) ON DELETE RESTRICT,
+  appointment_date DATE NOT NULL,
+  appointment_time TIME NOT NULL,
+  status           VARCHAR(20) NOT NULL DEFAULT 'Scheduled'
+                   CHECK (status IN ('Scheduled', 'Completed', 'Cancelled', 'No-show')),
+  UNIQUE (doctor_id, appointment_date, appointment_time)
+);
+
+CREATE TABLE consultations (
+  consultation_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  appointment_id  INT NOT NULL UNIQUE REFERENCES appointments(appointment_id) ON DELETE CASCADE,
+  symptoms        TEXT,
+  diagnosis       TEXT
+);
+
+CREATE TABLE medications (
+  medication_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name          VARCHAR(100) NOT NULL UNIQUE,
+  unit_price    NUMERIC(10,2) NOT NULL CHECK (unit_price >= 0)
+);
+
+CREATE TABLE prescriptions (
+  prescription_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  consultation_id INT NOT NULL REFERENCES consultations(consultation_id) ON DELETE CASCADE,
+  date_issued     DATE NOT NULL DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE prescription_items (
+  prescription_id INT NOT NULL REFERENCES prescriptions(prescription_id) ON DELETE CASCADE,
+  medication_id   INT NOT NULL REFERENCES medications(medication_id) ON DELETE RESTRICT,
+  dosage          VARCHAR(100) NOT NULL,
+  quantity        INT NOT NULL CHECK (quantity > 0),
+  PRIMARY KEY (prescription_id, medication_id)
+);
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat >> portfolio-1-database-design/carebridge-schema.sql << 'EOF'
+
+CREATE TABLE lab_tests (
+  test_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  test_name VARCHAR(100) NOT NULL UNIQUE,
+  price     NUMERIC(10,2) NOT NULL CHECK (price >= 0)
+);
+
+CREATE TABLE lab_requests (
+  request_id      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  consultation_id INT NOT NULL REFERENCES consultations(consultation_id) ON DELETE CASCADE,
+  test_id         INT NOT NULL REFERENCES lab_tests(test_id) ON DELETE RESTRICT,
+  result          TEXT,
+  result_date     DATE
+);
+
+CREATE TABLE invoices (
+  invoice_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  patient_id   INT NOT NULL REFERENCES patients(patient_id) ON DELETE RESTRICT,
+  invoice_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  total_amount NUMERIC(12,2) NOT NULL CHECK (total_amount >= 0),
+  status       VARCHAR(20) NOT NULL DEFAULT 'Unpaid'
+               CHECK (status IN ('Unpaid', 'Part-paid', 'Paid'))
+);
+
+CREATE TABLE payments (
+  payment_id     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  invoice_id     INT NOT NULL REFERENCES invoices(invoice_id) ON DELETE RESTRICT,
+  amount         NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+  payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('Cash', 'Card', 'Transfer', 'HMO')),
+  payment_date   DATE NOT NULL DEFAULT CURRENT_DATE
+);
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -f portfolio-1-database-design/carebridge-schema.sql
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "payments" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "invoices" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "lab_requests" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "lab_tests" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "prescription_items" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "prescriptions" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "medications" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "consultations" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "appointments" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "patients" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "doctors" does not exist, skipping
+psql:portfolio-1-database-design/carebridge-schema.sql:4: NOTICE:  table "departments" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+psql:portfolio-1-database-design/carebridge-schema.sql:76: ERROR:  syntax error at or near "CRE"
+LINE 1: CRE
+        ^
+psql:portfolio-1-database-design/carebridge-schema.sql:82: ERROR:  relation "departments" already exists
+psql:portfolio-1-database-design/carebridge-schema.sql:91: ERROR:  relation "doctors" already exists
+psql:portfolio-1-database-design/carebridge-schema.sql:101: ERROR:  relation "patients" already exists
+psql:portfolio-1-database-design/carebridge-schema.sql:112: ERROR:  relation "appointments" already exists
+psql:portfolio-1-database-design/carebridge-schema.sql:119: ERROR:  relation "consultations" already exists
+psql:portfolio-1-database-design/carebridge-schema.sql:125: ERROR:  relation "medications" already exists
+psql:portfolio-1-database-design/carebridge-schema.sql:131: ERROR:  relation "prescriptions" already exists
+psql:portfolio-1-database-design/carebridge-schema.sql:139: ERROR:  relation "prescription_items" already exists
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -c "\dt"
+                List of tables
+ Schema |        Name        | Type  | Owner  
+--------+--------------------+-------+--------
+ public | appointments       | table | favour
+ public | consultations      | table | favour
+ public | departments        | table | favour
+ public | doctors            | table | favour
+ public | invoices           | table | favour
+ public | lab_requests       | table | favour
+ public | lab_tests          | table | favour
+ public | medications        | table | favour
+ public | patients           | table | favour
+ public | payments           | table | favour
+ public | prescription_items | table | favour
+ public | prescriptions      | table | favour
+(12 rows)
+
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % start=$(grep -n "CareBridge Specialist Clinic" portfolio-1-database-design/carebridge-schema.sql | tail -1 | cut -d: -f1)
+tail -n +$start portfolio-1-database-design/carebridge-schema.sql > temp.sql && mv temp.sql portfolio-1-database-design/carebridge-schema.sql
+head -3 portfolio-1-database-design/carebridge-schema.sql
+-- CareBridge Specialist Clinic: relational schema (PostgreSQL)
+
+DROP TABLE IF EXISTS payments, invoices, lab_requests, lab_tests, prescription_items,
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -f portfolio-1-database-design/carebridge-schema.sql
+DROP TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -c "\dt"
+                List of tables
+ Schema |        Name        | Type  | Owner  
+--------+--------------------+-------+--------
+ public | appointments       | table | favour
+ public | consultations      | table | favour
+ public | departments        | table | favour
+ public | doctors            | table | favour
+ public | invoices           | table | favour
+ public | lab_requests       | table | favour
+ public | lab_tests          | table | favour
+ public | medications        | table | favour
+ public | patients           | table | favour
+ public | payments           | table | favour
+ public | prescription_items | table | favour
+ public | prescriptions      | table | favour
+(12 rows)
+
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Add PostgreSQL schema with keys and constraints"
+git push
+[main 2845059] Add PostgreSQL schema with keys and constraints
+ 1 file changed, 98 insertions(+)
+ create mode 100644 portfolio-1-database-design/carebridge-schema.sql
+Enumerating objects: 6, done.
+Counting objects: 100% (6/6), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 1.37 KiB | 1.37 MiB/s, done.
+Total 4 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   ccc4b85..2845059  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % grep -c "CREATE TABLE" portfolio-1-database-design/carebridge-schema.sql
+12
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat > portfolio-1-database-design/carebridge-sample-data.sql << 'EOF'
+-- CareBridge Specialist Clinic: sample data
+SELECT setseed(0.42);
+TRUNCATE departments, doctors, patients, appointments, consultations, medications, prescriptions,
+  prescription_items, lab_tests, lab_requests, invoices, payments RESTART IDENTITY CASCADE;
+
+INSERT INTO departments (name, location) VALUES
+  ('General Medicine','Block A'), ('Cardiology','Block B'), ('Paediatrics','Block C'),
+  ('Obstetrics and Gynaecology','Block D'), ('Laboratory Services','Block E');
+
+INSERT INTO doctors (first_name, last_name, specialty, phone, department_id) VALUES
+  ('Ngozi','Okafor','General Practitioner','08030000001',1),
+  ('Ibrahim','Musa','General Practitioner','08030000002',1),
+  ('Tunde','Adeyemi','Cardiologist','08030000003',2),
+  ('Amaka','Eze','Cardiologist','08030000004',2),
+  ('Fatima','Bello','Paediatrician','08030000005',3),
+  ('Chukwuemeka','Obi','Paediatrician','08030000006',3),
+  ('Funmilayo','Ojo','Obstetrician','08030000007',4),
+  ('Aisha','Yusuf','Gynaecologist','08030000008',4),
+  ('Segun','Balogun','Pathologist','08030000009',5),
+  ('Halima','Garba','General Practitioner','08030000010',1);
+
+INSERT INTO medications (name, unit_price) VALUES
+  ('Paracetamol 500mg',50), ('Amoxicillin 500mg',150), ('Artemether-Lumefantrine',1200),
+  ('Amlodipine 5mg',100), ('Metformin 500mg',80), ('Ibuprofen 400mg',70),
+  ('Ferrous Sulphate',40), ('Ciprofloxacin 500mg',200);
+
+INSERT INTO lab_tests (test_name, price) VALUES
+  ('Full Blood Count',5000), ('Malaria Parasite Test',2500), ('Fasting Blood Sugar',3000),
+  ('Lipid Profile',8000), ('Urinalysis',2000), ('Widal Test',3000);
+
+INSERT INTO patients (first_name, last_name, date_of_birth, gender, phone, blood_group)
+SELECT
+  (ARRAY['Chioma','Emeka','Aisha','Tunde','Ngozi','Ibrahim','Funke','Musa','Blessing','David'])[1 + floor(random()*10)::int],
+  (ARRAY['Okafor','Adeyemi','Bello','Eze','Ojo','Musa','Obi','Garba','Balogun','Nwosu'])[1 + floor(random()*10)::int],
+  DATE '1950-01-01' + floor(random()*25000)::int,
+  (ARRAY['Male','Female'])[1 + floor(random()*2)::int],
+  '0905' || lpad(g::text, 7, '0'),
+  (ARRAY['A+','A-','B+','B-','AB+','AB-','O+','O-'])[1 + floor(random()*8)::int]
+FROM generate_series(1, 5000) AS g;
+
+-- 20,000 appointments: each doctor gets 16 half-hour slots per day, so no double-booking
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+SELECT
+  1 + floor(random()*5000)::int,
+  (g % 10) + 1,
+  DATE '2025-01-01' + (g / 10) / 16,
+  TIME '08:00' + ((g / 10) % 16) * INTERVAL '30 minutes',
+  (ARRAY['Completed','Completed','Completed','Completed','Cancelled','No-show'])[1 + floor(random()*6)::int]
+FROM generate_series(0, 19999) AS g;
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat >> portfolio-1-database-design/carebridge-sample-data.sql << 'EOF'
+
+INSERT INTO consultations (appointment_id, symptoms, diagnosis)
+SELECT appointment_id,
+  (ARRAY['Fever and headache','Chest pain','Cough and catarrh','Abdominal pain','Fatigue','Routine check-up'])[1 + floor(random()*6)::int],
+  (ARRAY['Malaria','Hypertension','Upper respiratory infection','Gastroenteritis','Anaemia','Type 2 diabetes','Healthy'])[1 + floor(random()*7)::int]
+FROM appointments WHERE status = 'Completed';
+
+INSERT INTO prescriptions (consultation_id, date_issued)
+SELECT c.consultation_id, a.appointment_date
+FROM consultations c JOIN appointments a ON a.appointment_id = c.appointment_id
+WHERE random() < 0.7;
+
+INSERT INTO prescription_items (prescription_id, medication_id, dosage, quantity)
+SELECT prescription_id, 1 + (prescription_id % 8), 'Twice daily', 1 + floor(random()*20)::int
+FROM prescriptions;
+
+INSERT INTO prescription_items (prescription_id, medication_id, dosage, quantity)
+SELECT prescription_id, 1 + ((prescription_id + 3) % 8), 'Once daily', 1 + floor(random()*20)::int
+FROM prescriptions WHERE prescription_id % 2 = 0;
+
+INSERT INTO lab_requests (consultation_id, test_id, result, result_date)
+SELECT c.consultation_id, 1 + floor(random()*6)::int,
+  (ARRAY['Normal','Abnormal','Normal','Pending review'])[1 + floor(random()*4)::int],
+  a.appointment_date + 1
+FROM consultations c JOIN appointments a ON a.appointment_id = c.appointment_id
+WHERE random() < 0.4;
+
+INSERT INTO invoices (patient_id, invoice_date, total_amount, status)
+SELECT a.patient_id, a.appointment_date, round((5000 + random()*45000)::numeric, 2),
+  (ARRAY['Paid','Paid','Paid','Part-paid','Unpaid'])[1 + floor(random()*5)::int]
+FROM consultations c JOIN appointments a ON a.appointment_id = c.appointment_id;
+
+INSERT INTO payments (invoice_id, amount, payment_method, payment_date)
+SELECT invoice_id,
+  CASE WHEN status = 'Paid' THEN total_amount ELSE round(total_amount / 2, 2) END,
+  (ARRAY['Cash','Card','Transfer','HMO'])[1 + floor(random()*4)::int],
+  invoice_date
+FROM invoices WHERE status IN ('Paid', 'Part-paid');
+
+ANALYZE;
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -f portfolio-1-database-design/carebridge-sample-data.sql
+ setseed 
+---------
+ 
+(1 row)
+
+TRUNCATE TABLE
+INSERT 0 5
+INSERT 0 10
+INSERT 0 8
+INSERT 0 6
+INSERT 0 5000
+INSERT 0 20000
+INSERT 0 13469
+INSERT 0 9500
+INSERT 0 9500
+INSERT 0 4750
+INSERT 0 5371
+INSERT 0 13469
+INSERT 0 10793
+ANALYZE
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -c "SELECT 'patients' AS table_name, COUNT(*) FROM patients UNION ALL SELECT 'appointments', COUNT(*) FROM appointments UNION ALL SELECT 'consultations', COUNT(*) FROM consultations UNION ALL SELECT 'prescriptions', COUNT(*) FROM prescriptions UNION ALL SELECT 'lab_requests', COUNT(*) FROM lab_requests UNION ALL SELECT 'invoices', COUNT(*) FROM invoices UNION ALL SELECT 'payments', COUNT(*) FROM payments;"
+  table_name   | count 
+---------------+-------
+ patients      |  5000
+ appointments  | 20000
+ consultations | 13469
+ prescriptions |  9500
+ lab_requests  |  5371
+ invoices      | 13469
+ payments      | 10793
+(7 rows)
+
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Add generated sample data for CareBridge clinic"
+git push
+[main 90f3484] Add generated sample data for CareBridge clinic
+ 1 file changed, 89 insertions(+)
+ create mode 100644 portfolio-1-database-design/carebridge-sample-data.sql
+Enumerating objects: 6, done.
+Counting objects: 100% (6/6), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 2.07 KiB | 2.07 MiB/s, done.
+Total 4 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   2845059..90f3484  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % ls portfolio-1-database-design/screenshots
+ls: portfolio-1-database-design/screenshots: No such file or directory
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % mkdir -p portfolio-1-database-design/screenshots
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -c "\dt"
+                List of tables
+ Schema |        Name        | Type  | Owner  
+--------+--------------------+-------+--------
+ public | appointments       | table | favour
+ public | consultations      | table | favour
+ public | departments        | table | favour
+ public | doctors            | table | favour
+ public | invoices           | table | favour
+ public | lab_requests       | table | favour
+ public | lab_tests          | table | favour
+ public | medications        | table | favour
+ public | patients           | table | favour
+ public | payments           | table | favour
+ public | prescription_items | table | favour
+ public | prescriptions      | table | favour
+(12 rows)
+
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % screencapture -i portfolio-1-database-design/screenshots/tables-created.png
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat > portfolio-1-database-design/README.md << 'EOF'
+# Portfolio 1: Database Design and Modelling
+
+## Case study
+CareBridge Specialist Clinic, Abuja (simulated). See [case-study.md](../case-study.md).
+
+## Files
+| File | Purpose |
+|---|---|
+| `carebridge-clinic-erd.png` | ER diagram (exported from dbdiagram.io) |
+| `carebridge-clinic-erd.dbml` | Source code of the ER diagram |
+| `carebridge-schema.sql` | PostgreSQL schema: tables, keys and constraints |
+| `carebridge-sample-data.sql` | Generated sample data (5,000 patients, 20,000 appointments) |
+| `screenshots/` | Evidence of the schema and data being created |
+
+## ER diagram
+![CareBridge ER diagram](carebridge-clinic-erd.png)
+
+The design has 12 entities. Key relationships:
+- One department has many doctors; one doctor has many appointments.
+- One patient has many appointments and many invoices.
+- One appointment has at most one consultation (one-to-one, enforced by `UNIQUE`).
+- Prescriptions and medications are many-to-many, resolved by the junction table `prescription_items`.
+- One consultation can have many lab requests; one invoice can have many payments (part-payments).
+
+## Keys and constraints
+| Constraint | Example | Why |
+|---|---|---|
+| Primary key | `patient_id` (identity) | Uniquely identifies each row |
+| Composite primary key | `(prescription_id, medication_id)` | Same drug cannot appear twice on one prescription |
+| Foreign key | `appointments.patient_id` | Cannot book for a patient who does not exist |
+| `UNIQUE` | `(doctor_id, appointment_date, appointment_time)` | Prevents double-booking a doctor |
+| `CHECK` | `blood_group IN ('A+', ...)`, `quantity > 0` | Rejects invalid values |
+| `ON DELETE RESTRICT` | patients, doctors | Protects medical and billing history |
+| `ON DELETE CASCADE` | consultation → prescriptions | Child records removed with their parent |
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat >> portfolio-1-database-design/README.md << 'EOF'
+
+## Normalisation
+The schema is normalised to **Third Normal Form (3NF)**.
+
+**First Normal Form (1NF):** every column holds a single, atomic value and every table has a primary key. For example, a prescription's medicines are not stored as a list such as "Paracetamol, Amoxicillin" in one column; each medicine is a separate row in `prescription_items`.
+
+**Second Normal Form (2NF):** no non-key column depends on only part of a composite key. The only composite key is `(prescription_id, medication_id)`. `dosage` and `quantity` depend on both parts, while the medicine's `name` and `unit_price` depend only on `medication_id`, so they are stored in `medications`, not repeated in every prescription item.
+
+**Third Normal Form (3NF):** no non-key column depends on another non-key column. A doctor's department name is stored once in `departments`, not in `doctors`, because it depends on `department_id` rather than on the doctor. Likewise, patient details are not repeated in `appointments`, and test prices live in `lab_tests`.
+
+**Deliberate trade-off:** `invoices.total_amount` could be calculated from consultation, medication and test charges. It is stored to keep a fixed record of what was billed at that time and to avoid recalculating totals for every report.
+
+## How to run
+
+    createdb carebridge_clinic
+    psql -d carebridge_clinic -f carebridge-schema.sql
+    psql -d carebridge_clinic -f carebridge-sample-data.sql
+
+## Evidence
+![Tables created](screenshots/tables-created.png)
+![Sample data row counts](screenshots/sample-data-counts.png)
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % tail -5 portfolio-1-database-design/README.md
+    psql -d carebridge_clinic -f carebridge-sample-data.sql
+
+## Evidence
+![Tables created](screenshots/tables-created.png)
+![Sample data row counts](screenshots/sample-data-counts.png)
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Add Portfolio 1 README with normalisation explanation"
+git push
+[main 37f340e] Add Portfolio 1 README with normalisation explanation
+ 1 file changed, 54 insertions(+)
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 1.83 KiB | 1.83 MiB/s, done.
+Total 4 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   90f3484..37f340e  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Add Portfolio 1 README with normalisation explanation"
+git push
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+Everything up-to-date
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat > portfolio-2-query-optimisation/carebridge-queries.sql << 'EOF'
+-- CareBridge clinic: business queries for Portfolio 2
+
+\echo '--- Q1: Full visit history for one patient (doctor seen and diagnosis) ---'
+SELECT a.appointment_date, d.first_name || ' ' || d.last_name AS doctor, c.diagnosis
+FROM appointments a
+JOIN doctors d ON d.doctor_id = a.doctor_id
+LEFT JOIN consultations c ON c.appointment_id = a.appointment_id
+WHERE a.patient_id = 1234
+ORDER BY a.appointment_date;
+
+\echo '--- Q2: One doctor''s schedule for a given day ---'
+SELECT appointment_time, patient_id, status
+FROM appointments
+WHERE doctor_id = 3 AND appointment_date = DATE '2025-03-10'
+ORDER BY appointment_time;
+
+\echo '--- Q3: Find a patient by name at the front desk ---'
+SELECT patient_id, first_name, last_name, phone
+FROM patients
+WHERE last_name = 'Okafor' AND first_name = 'Chioma'
+LIMIT 10;
+
+\echo '--- Q4: Top 5 diagnoses ---'
+SELECT diagnosis, COUNT(*) AS cases
+FROM consultations
+GROUP BY diagnosis
+ORDER BY cases DESC
+LIMIT 5;
+
+\echo '--- Q5: Monthly revenue by payment method ---'
+SELECT date_trunc('month', payment_date)::date AS month, payment_method, SUM(amount) AS revenue
+FROM payments
+GROUP BY month, payment_method
+ORDER BY month, payment_method;
+
+\echo '--- Q6: Unpaid invoices with patient phone numbers (for follow-up calls) ---'
+SELECT i.invoice_id, p.first_name, p.last_name, p.phone, i.total_amount
+FROM invoices i
+JOIN patients p ON p.patient_id = i.patient_id
+WHERE i.status = 'Unpaid'
+ORDER BY i.total_amount DESC
+LIMIT 10;
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -f portfolio-2-query-optimisation/carebridge-queries.sql > portfolio-2-query-optimisation/query-results.txt
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat portfolio-2-query-optimisation/query-results.txt
+--- Q1: Full visit history for one patient (doctor seen and diagnosis) ---
+ appointment_date |     doctor      | diagnosis 
+------------------+-----------------+-----------
+ 2025-01-19       | Ibrahim Musa    | Malaria
+ 2025-02-25       | Fatima Bello    | Healthy
+ 2025-03-02       | Funmilayo Ojo   | Malaria
+ 2025-03-09       | Chukwuemeka Obi | 
+ 2025-03-24       | Tunde Adeyemi   | Malaria
+(5 rows)
+
+--- Q2: One doctor's schedule for a given day ---
+ appointment_time | patient_id |  status   
+------------------+------------+-----------
+ 08:00:00         |       3940 | Cancelled
+ 08:30:00         |       3783 | Completed
+ 09:00:00         |        285 | Completed
+ 09:30:00         |         58 | No-show
+ 10:00:00         |       3851 | Completed
+ 10:30:00         |       2417 | Completed
+ 11:00:00         |       1100 | No-show
+ 11:30:00         |       4321 | Completed
+ 12:00:00         |       2003 | Cancelled
+ 12:30:00         |       2720 | Completed
+ 13:00:00         |       4516 | Completed
+ 13:30:00         |       2755 | Completed
+ 14:00:00         |       1581 | Cancelled
+ 14:30:00         |       4675 | Completed
+ 15:00:00         |        687 | Cancelled
+ 15:30:00         |        434 | Cancelled
+(16 rows)
+
+--- Q3: Find a patient by name at the front desk ---
+ patient_id | first_name | last_name |    phone    
+------------+------------+-----------+-------------
+         62 | Chioma     | Okafor    | 09050000062
+         90 | Chioma     | Okafor    | 09050000090
+        191 | Chioma     | Okafor    | 09050000191
+        199 | Chioma     | Okafor    | 09050000199
+        288 | Chioma     | Okafor    | 09050000288
+        359 | Chioma     | Okafor    | 09050000359
+        435 | Chioma     | Okafor    | 09050000435
+        602 | Chioma     | Okafor    | 09050000602
+        631 | Chioma     | Okafor    | 09050000631
+        775 | Chioma     | Okafor    | 09050000775
+(10 rows)
+
+--- Q4: Top 5 diagnoses ---
+          diagnosis          | cases 
+-----------------------------+-------
+ Upper respiratory infection |  1991
+ Healthy                     |  1971
+ Gastroenteritis             |  1949
+ Anaemia                     |  1933
+ Type 2 diabetes             |  1887
+(5 rows)
+
+--- Q5: Monthly revenue by payment method ---
+   month    | payment_method |   revenue   
+------------+----------------+-------------
+ 2025-01-01 | Card           | 16302300.43
+ 2025-01-01 | Cash           | 15845874.18
+ 2025-01-01 | HMO            | 14580372.34
+ 2025-01-01 | Transfer       | 16640995.07
+ 2025-02-01 | Card           | 15774055.33
+ 2025-02-01 | Cash           | 14489174.22
+ 2025-02-01 | HMO            | 14857172.27
+ 2025-02-01 | Transfer       | 14956262.14
+ 2025-03-01 | Card           | 16046182.70
+ 2025-03-01 | Cash           | 16370930.58
+ 2025-03-01 | HMO            | 16177502.77
+ 2025-03-01 | Transfer       | 16016346.46
+ 2025-04-01 | Card           | 14608267.68
+ 2025-04-01 | Cash           | 15675122.31
+ 2025-04-01 | HMO            | 15888375.52
+ 2025-04-01 | Transfer       | 15604978.80
+ 2025-05-01 | Card           |  2778646.11
+ 2025-05-01 | Cash           |  2404138.51
+ 2025-05-01 | HMO            |  2716108.28
+ 2025-05-01 | Transfer       |  2600433.80
+(20 rows)
+
+--- Q6: Unpaid invoices with patient phone numbers (for follow-up calls) ---
+ invoice_id | first_name | last_name |    phone    | total_amount 
+------------+------------+-----------+-------------+--------------
+       8190 | Aisha      | Ojo       | 09050000547 |     49986.74
+       1332 | Aisha      | Musa      | 09050001955 |     49961.13
+       6534 | Funke      | Obi       | 09050003238 |     49959.04
+       7431 | Aisha      | Nwosu     | 09050004252 |     49918.44
+       8337 | David      | Eze       | 09050000419 |     49892.94
+      11608 | David      | Adeyemi   | 09050002136 |     49883.66
+        598 | Blessing   | Adeyemi   | 09050004048 |     49865.32
+       7287 | Emeka      | Okafor    | 09050003810 |     49859.34
+       4249 | Funke      | Adeyemi   | 09050001273 |     49857.50
+       2526 | Aisha      | Ojo       | 09050004167 |     49856.92
+(10 rows)
+
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Add Portfolio 2 business queries and results"
+git push
+[main b0535b7] Add Portfolio 2 business queries and results
+ 2 files changed, 138 insertions(+)
+ create mode 100644 portfolio-2-query-optimisation/carebridge-queries.sql
+ create mode 100644 portfolio-2-query-optimisation/query-results.txt
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 2.28 KiB | 2.28 MiB/s, done.
+Total 5 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   37f340e..b0535b7  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat > portfolio-2-query-optimisation/explain-plans.sql << 'EOF'
+-- Execution plans for the key CareBridge queries
+
+\echo '=== Existing indexes ==='
+\di
+
+\echo '=== Q1: Patient visit history ==='
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT a.appointment_date, d.first_name || ' ' || d.last_name AS doctor, c.diagnosis
+FROM appointments a
+JOIN doctors d ON d.doctor_id = a.doctor_id
+LEFT JOIN consultations c ON c.appointment_id = a.appointment_id
+WHERE a.patient_id = 1234
+ORDER BY a.appointment_date;
+
+\echo '=== Q2: Doctor schedule for one day ==='
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT appointment_time, patient_id, status
+FROM appointments
+WHERE doctor_id = 3 AND appointment_date = DATE '2025-03-10'
+ORDER BY appointment_time;
+
+\echo '=== Q3: Find patient by name ==='
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT patient_id, first_name, last_name, phone
+FROM patients
+WHERE last_name = 'Okafor' AND first_name = 'Chioma'
+LIMIT 10;
+
+\echo '=== Q6: Unpaid invoices with patient phone numbers ==='
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT i.invoice_id, p.first_name, p.last_name, p.phone, i.total_amount
+FROM invoices i
+JOIN patients p ON p.patient_id = i.patient_id
+WHERE i.status = 'Unpaid'
+ORDER BY i.total_amount DESC
+LIMIT 10;
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -f portfolio-2-query-optimisation/explain-plans.sql > portfolio-2-query-optimisation/plans-before-indexing.txt
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat portfolio-2-query-optimisation/plans-before-indexing.txt
+=== Existing indexes ===
+                                               List of indexes
+ Schema |                             Name                             | Type  | Owner  |       Table        
+--------+--------------------------------------------------------------+-------+--------+--------------------
+ public | appointments_doctor_id_appointment_date_appointment_time_key | index | favour | appointments
+ public | appointments_pkey                                            | index | favour | appointments
+ public | consultations_appointment_id_key                             | index | favour | consultations
+ public | consultations_pkey                                           | index | favour | consultations
+ public | departments_name_key                                         | index | favour | departments
+ public | departments_pkey                                             | index | favour | departments
+ public | doctors_phone_key                                            | index | favour | doctors
+ public | doctors_pkey                                                 | index | favour | doctors
+ public | invoices_pkey                                                | index | favour | invoices
+ public | lab_requests_pkey                                            | index | favour | lab_requests
+ public | lab_tests_pkey                                               | index | favour | lab_tests
+ public | lab_tests_test_name_key                                      | index | favour | lab_tests
+ public | medications_name_key                                         | index | favour | medications
+ public | medications_pkey                                             | index | favour | medications
+ public | patients_phone_key                                           | index | favour | patients
+ public | patients_pkey                                                | index | favour | patients
+ public | payments_pkey                                                | index | favour | payments
+ public | prescription_items_pkey                                      | index | favour | prescription_items
+ public | prescriptions_pkey                                           | index | favour | prescriptions
+(19 rows)
+
+=== Q1: Patient visit history ===
+                                                                            QUERY PLAN                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=448.98..448.99 rows=4 width=49) (actual time=1.445..1.446 rows=5.00 loops=1)
+   Sort Key: a.appointment_date
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=182
+   ->  Nested Loop Left Join  (cost=0.29..448.94 rows=4 width=49) (actual time=1.394..1.438 rows=5.00 loops=1)
+         Buffers: shared hit=179
+         ->  Nested Loop  (cost=0.00..415.71 rows=4 width=20) (actual time=1.386..1.392 rows=5.00 loops=1)
+               Join Filter: (a.doctor_id = d.doctor_id)
+               Rows Removed by Join Filter: 45
+               Buffers: shared hit=165
+               ->  Seq Scan on doctors d  (cost=0.00..1.10 rows=10 width=16) (actual time=0.002..0.003 rows=10.00 loops=1)
+                     Buffers: shared hit=1
+               ->  Materialize  (cost=0.00..414.02 rows=4 width=12) (actual time=0.021..0.138 rows=5.00 loops=10)
+                     Storage: Memory  Maximum Storage: 17kB
+                     Buffers: shared hit=164
+                     ->  Seq Scan on appointments a  (cost=0.00..414.00 rows=4 width=12) (actual time=0.207..1.374 rows=5.00 loops=1)
+                           Filter: (patient_id = 1234)
+                           Rows Removed by Filter: 19995
+                           Buffers: shared hit=164
+         ->  Index Scan using consultations_appointment_id_key on consultations c  (cost=0.29..8.30 rows=1 width=17) (actual time=0.008..0.008 rows=0.80 loops=5)
+               Index Cond: (appointment_id = a.appointment_id)
+               Index Searches: 5
+               Buffers: shared hit=14
+ Planning:
+   Buffers: shared hit=290
+ Planning Time: 1.161 ms
+ Execution Time: 1.463 ms
+(27 rows)
+
+=== Q2: Doctor schedule for one day ===
+                                                                                   QUERY PLAN                                                                                   
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=54.02..54.06 rows=16 width=21) (actual time=0.034..0.035 rows=16.00 loops=1)
+   Sort Key: appointment_time
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=9
+   ->  Bitmap Heap Scan on appointments  (cost=4.45..53.70 rows=16 width=21) (actual time=0.019..0.022 rows=16.00 loops=1)
+         Recheck Cond: ((doctor_id = 3) AND (appointment_date = '2025-03-10'::date))
+         Heap Blocks: exact=2
+         Buffers: shared hit=4
+         ->  Bitmap Index Scan on appointments_doctor_id_appointment_date_appointment_time_key  (cost=0.00..4.45 rows=16 width=0) (actual time=0.013..0.013 rows=16.00 loops=1)
+               Index Cond: ((doctor_id = 3) AND (appointment_date = '2025-03-10'::date))
+               Index Searches: 1
+               Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=10
+ Planning Time: 0.049 ms
+ Execution Time: 0.046 ms
+(16 rows)
+
+=== Q3: Find patient by name ===
+                                                   QUERY PLAN                                                   
+----------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.00..22.83 rows=10 width=27) (actual time=0.010..0.080 rows=10.00 loops=1)
+   Buffers: shared hit=9
+   ->  Seq Scan on patients  (cost=0.00..121.00 rows=53 width=27) (actual time=0.009..0.078 rows=10.00 loops=1)
+         Filter: (((last_name)::text = 'Okafor'::text) AND ((first_name)::text = 'Chioma'::text))
+         Rows Removed by Filter: 765
+         Buffers: shared hit=9
+ Planning:
+   Buffers: shared hit=40
+ Planning Time: 0.200 ms
+ Execution Time: 0.085 ms
+(10 rows)
+
+=== Q6: Unpaid invoices with patient phone numbers ===
+                                                              QUERY PLAN                                                               
+---------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=490.73..490.75 rows=10 width=35) (actual time=3.228..3.230 rows=10.00 loops=1)
+   Buffers: shared hit=148
+   ->  Sort  (cost=490.73..497.42 rows=2676 width=35) (actual time=3.228..3.229 rows=10.00 loops=1)
+         Sort Key: i.total_amount DESC
+         Sort Method: top-N heapsort  Memory: 26kB
+         Buffers: shared hit=148
+         ->  Hash Join  (cost=158.50..432.90 rows=2676 width=35) (actual time=1.162..2.742 rows=2676.00 loops=1)
+               Hash Cond: (i.patient_id = p.patient_id)
+               Buffers: shared hit=145
+               ->  Seq Scan on invoices i  (cost=0.00..267.36 rows=2676 width=16) (actual time=0.010..1.180 rows=2676.00 loops=1)
+                     Filter: ((status)::text = 'Unpaid'::text)
+                     Rows Removed by Filter: 10793
+                     Buffers: shared hit=99
+               ->  Hash  (cost=96.00..96.00 rows=5000 width=27) (actual time=1.148..1.148 rows=5000.00 loops=1)
+                     Buckets: 8192  Batches: 1  Memory Usage: 367kB
+                     Buffers: shared hit=46
+                     ->  Seq Scan on patients p  (cost=0.00..96.00 rows=5000 width=27) (actual time=0.002..0.540 rows=5000.00 loops=1)
+                           Buffers: shared hit=46
+ Planning:
+   Buffers: shared hit=58
+ Planning Time: 0.311 ms
+ Execution Time: 3.240 ms
+(22 rows)
+
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Capture execution plans before indexing"
+git push
+[main 57e7c9d] Capture execution plans before indexing
+ 2 files changed, 156 insertions(+)
+ create mode 100644 portfolio-2-query-optimisation/explain-plans.sql
+ create mode 100644 portfolio-2-query-optimisation/plans-before-indexing.txt
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 2.54 KiB | 2.54 MiB/s, done.
+Total 5 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   b0535b7..57e7c9d  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat > portfolio-2-query-optimisation/carebridge-indexes.sql << 'EOF'
+-- Indexes to speed up the CareBridge queries
+
+-- Q1: foreign keys are not indexed automatically in PostgreSQL
+CREATE INDEX IF NOT EXISTS idx_appointments_patient_id
+  ON appointments (patient_id);
+
+-- Q3: front-desk search by surname, then first name
+CREATE INDEX IF NOT EXISTS idx_patients_last_first_name
+  ON patients (last_name, first_name);
+
+-- Q6: partial index holding only unpaid invoices, already sorted by amount
+CREATE INDEX IF NOT EXISTS idx_invoices_unpaid_amount
+  ON invoices (total_amount DESC)
+  WHERE status = 'Unpaid';
+
+ANALYZE;
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -f portfolio-2-query-optimisation/carebridge-indexes.sql
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+ANALYZE
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -f portfolio-2-query-optimisation/explain-plans.sql > portfolio-2-query-optimisation/plans-after-indexing.txt
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % echo "BEFORE:"; grep -E "^=== Q|Execution Time" portfolio-2-query-optimisation/plans-before-indexing.txt
+echo "AFTER:";  grep -E "^=== Q|Execution Time" portfolio-2-query-optimisation/plans-after-indexing.txt
+BEFORE:
+=== Q1: Patient visit history ===
+ Execution Time: 1.463 ms
+=== Q2: Doctor schedule for one day ===
+ Execution Time: 0.046 ms
+=== Q3: Find patient by name ===
+ Execution Time: 0.085 ms
+=== Q6: Unpaid invoices with patient phone numbers ===
+ Execution Time: 3.240 ms
+AFTER:
+=== Q1: Patient visit history ===
+ Execution Time: 0.144 ms
+=== Q2: Doctor schedule for one day ===
+ Execution Time: 0.041 ms
+=== Q3: Find patient by name ===
+ Execution Time: 0.061 ms
+=== Q6: Unpaid invoices with patient phone numbers ===
+ Execution Time: 0.114 ms
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Add indexes and capture execution plans after indexing"
+git push
+[main 0c40af0] Add indexes and capture execution plans after indexing
+ 2 files changed, 145 insertions(+)
+ create mode 100644 portfolio-2-query-optimisation/carebridge-indexes.sql
+ create mode 100644 portfolio-2-query-optimisation/plans-after-indexing.txt
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 2.33 KiB | 2.33 MiB/s, done.
+Total 5 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   57e7c9d..0c40af0  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % grep -E "=== Q|Scan" portfolio-2-query-optimisation/plans-after-indexing.txt
+=== Q1: Patient visit history ===
+         ->  Seq Scan on doctors d  (cost=0.00..1.10 rows=10 width=16) (actual time=0.002..0.003 rows=10.00 loops=1)
+                     ->  Bitmap Heap Scan on appointments a  (cost=4.32..18.49 rows=4 width=12) (actual time=0.035..0.047 rows=5.00 loops=1)
+                           ->  Bitmap Index Scan on idx_appointments_patient_id  (cost=0.00..4.32 rows=4 width=0) (actual time=0.027..0.027 rows=5.00 loops=1)
+                     ->  Index Scan using consultations_appointment_id_key on consultations c  (cost=0.29..8.30 rows=1 width=17) (actual time=0.007..0.007 rows=0.80 loops=5)
+=== Q2: Doctor schedule for one day ===
+   ->  Bitmap Heap Scan on appointments  (cost=4.45..53.70 rows=16 width=21) (actual time=0.022..0.026 rows=16.00 loops=1)
+         ->  Bitmap Index Scan on appointments_doctor_id_appointment_date_appointment_time_key  (cost=0.00..4.45 rows=16 width=0) (actual time=0.016..0.016 rows=16.00 loops=1)
+=== Q3: Find patient by name ===
+   ->  Bitmap Heap Scan on patients  (cost=4.83..53.93 rows=53 width=27) (actual time=0.041..0.053 rows=10.00 loops=1)
+         ->  Bitmap Index Scan on idx_patients_last_first_name  (cost=0.00..4.81 rows=53 width=0) (actual time=0.033..0.033 rows=52.00 loops=1)
+=== Q6: Unpaid invoices with patient phone numbers ===
+         ->  Index Scan using idx_invoices_unpaid_amount on invoices i  (cost=0.28..484.41 rows=2676 width=16) (actual time=0.022..0.045 rows=10.00 loops=1)
+               ->  Index Scan using patients_pkey on patients p  (cost=0.28..0.39 rows=1 width=27) (actual time=0.004..0.004 rows=1.00 loops=10)
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -d carebridge_clinic -c "SELECT indexrelname AS index_name, pg_size_pretty(pg_relation_size(indexrelid)) AS size FROM pg_stat_user_indexes WHERE indexrelname LIKE 'idx_%';" > portfolio-2-query-optimisation/index-sizes.txt
+cat portfolio-2-query-optimisation/index-sizes.txt
+          index_name          |  size  
+------------------------------+--------
+ idx_appointments_patient_id  | 272 kB
+ idx_patients_last_first_name | 56 kB
+ idx_invoices_unpaid_amount   | 96 kB
+(3 rows)
+
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat > portfolio-2-query-optimisation/README.md << 'EOF'
+# Portfolio 2: Query Processing and Optimisation
+
+## Files
+| File | Purpose |
+|---|---|
+| `carebridge-queries.sql` | Six business queries for the CareBridge clinic |
+| `query-results.txt` | Output of those queries |
+| `explain-plans.sql` | `EXPLAIN (ANALYZE, BUFFERS)` for four key queries |
+| `plans-before-indexing.txt` | Execution plans before adding indexes |
+| `carebridge-indexes.sql` | Three indexes added to improve performance |
+| `plans-after-indexing.txt` | Execution plans after adding indexes |
+| `index-sizes.txt` | Storage used by each new index |
+
+## Queries
+| Query | Business question |
+|---|---|
+| Q1 | Full visit history for one patient |
+| Q2 | One doctor's schedule for a given day |
+| Q3 | Find a patient by name at the front desk |
+| Q4 | Top five diagnoses |
+| Q5 | Monthly revenue by payment method |
+| Q6 | Unpaid invoices with patient phone numbers for follow-up |
+
+Dataset: 5,000 patients and 20,000 appointments (January to early May 2025), generated synthetically. May revenue in Q5 is lower because only the first days of May are covered.
+
+## Indexes added
+| Index | Columns | Reason |
+|---|---|---|
+| `idx_appointments_patient_id` | `appointments(patient_id)` | PostgreSQL does not index foreign keys automatically |
+| `idx_patients_last_first_name` | `patients(last_name, first_name)` | Supports name searches at the front desk |
+| `idx_invoices_unpaid_amount` | `invoices(total_amount DESC) WHERE status = 'Unpaid'` | Partial index: stores only unpaid invoices, pre-sorted by amount |
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat >> portfolio-2-query-optimisation/README.md << 'EOF'
+
+## Results
+| Query | Before | After | Plan change |
+|---|---|---|---|
+| Q1 Patient history | 1.463 ms | 0.144 ms | Seq Scan on 20,000 appointments → index lookup (about 10× faster) |
+| Q2 Doctor schedule | 0.046 ms | 0.041 ms | No change: already uses the index created by the `UNIQUE` constraint |
+| Q3 Patient by name | 0.085 ms | 0.061 ms | Small gain: `LIMIT 10` let the Seq Scan stop after about 775 rows |
+| Q6 Unpaid invoices | 3.240 ms | 0.114 ms | Seq Scan, filter and sort of 13,469 invoices → reads top 10 from the partial index (about 28× faster) |
+
+## Performance analysis
+The largest gains came where a query filtered a large table on a column with no index. Before indexing, Q1 read all 20,000 appointments to find one patient's visits. After indexing, PostgreSQL went straight to the matching rows.
+
+Q6 improved most because the partial index already holds only unpaid invoices in descending amount order. PostgreSQL reads the first ten entries instead of filtering 10,793 rows and sorting the remaining 2,676.
+
+Q2 shows that constraints also create indexes. The `UNIQUE (doctor_id, appointment_date, appointment_time)` rule that prevents double-booking also makes schedule lookups fast.
+
+Q3 shows that an index does not always produce a large gain. Because the query stops after ten matches, the sequential scan finished early. The index matters more for rare surnames, where a full scan of all patients would otherwise be needed.
+
+## Trade-offs and limitations
+- Every index uses extra storage (see `index-sizes.txt`) and slows down inserts and updates, because the index must be updated too. Indexes should only be added for frequent queries.
+- Timings are from single runs on a small dataset held in memory, so they vary slightly between runs. The plan changes (Seq Scan to index scan) are more reliable evidence than the exact milliseconds.
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Add Portfolio 2 README with performance analysis"
+git push
+[main 6c72740] Add Portfolio 2 README with performance analysis
+ 2 files changed, 58 insertions(+)
+ create mode 100644 portfolio-2-query-optimisation/index-sizes.txt
+Enumerating objects: 8, done.
+Counting objects: 100% (8/8), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 2.12 KiB | 2.12 MiB/s, done.
+Total 5 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   0c40af0..6c72740  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % grep -E "=== Q|Scan" portfolio-2-query-optimisation/plans-after-indexing.txt
+=== Q1: Patient visit history ===
+         ->  Seq Scan on doctors d  (cost=0.00..1.10 rows=10 width=16) (actual time=0.002..0.003 rows=10.00 loops=1)
+                     ->  Bitmap Heap Scan on appointments a  (cost=4.32..18.49 rows=4 width=12) (actual time=0.035..0.047 rows=5.00 loops=1)
+                           ->  Bitmap Index Scan on idx_appointments_patient_id  (cost=0.00..4.32 rows=4 width=0) (actual time=0.027..0.027 rows=5.00 loops=1)
+                     ->  Index Scan using consultations_appointment_id_key on consultations c  (cost=0.29..8.30 rows=1 width=17) (actual time=0.007..0.007 rows=0.80 loops=5)
+=== Q2: Doctor schedule for one day ===
+   ->  Bitmap Heap Scan on appointments  (cost=4.45..53.70 rows=16 width=21) (actual time=0.022..0.026 rows=16.00 loops=1)
+         ->  Bitmap Index Scan on appointments_doctor_id_appointment_date_appointment_time_key  (cost=0.00..4.45 rows=16 width=0) (actual time=0.016..0.016 rows=16.00 loops=1)
+=== Q3: Find patient by name ===
+   ->  Bitmap Heap Scan on patients  (cost=4.83..53.93 rows=53 width=27) (actual time=0.041..0.053 rows=10.00 loops=1)
+         ->  Bitmap Index Scan on idx_patients_last_first_name  (cost=0.00..4.81 rows=53 width=0) (actual time=0.033..0.033 rows=52.00 loops=1)
+=== Q6: Unpaid invoices with patient phone numbers ===
+         ->  Index Scan using idx_invoices_unpaid_amount on invoices i  (cost=0.28..484.41 rows=2676 width=16) (actual time=0.022..0.045 rows=10.00 loops=1)
+               ->  Index Scan using patients_pkey on patients p  (cost=0.28..0.39 rows=1 width=27) (actual time=0.004..0.004 rows=1.00 loops=10)
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat >> portfolio-2-query-optimisation/README.md << 'EOF'
+- Q1 still uses a `Seq Scan on doctors` after indexing. This is expected: with only 10 doctors, reading the whole table is cheaper than an index lookup. The PostgreSQL planner chooses plans by estimated cost, not simply because an index exists.
+EOF
+git add .
+git commit -m "Explain remaining sequential scan on small doctors table"
+git push
+[main 08dd4f4] Explain remaining sequential scan on small doctors table
+ 1 file changed, 1 insertion(+)
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 584 bytes | 584.00 KiB/s, done.
+Total 4 (delta 3), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   6c72740..08dd4f4  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat > portfolio-3-transactions-concurrency/transaction-demos.sql << 'EOF'
+-- CareBridge clinic: transaction demonstrations (Portfolio 3, Part A)
+-- Clean up previous demo runs so the script can be rerun
+DELETE FROM appointments WHERE appointment_date >= DATE '2025-06-01';
+
+-- DEMO 1: COMMIT - book an appointment and record its consultation as one unit
+BEGIN;
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (1, 1, DATE '2025-06-02', TIME '09:00', 'Completed');
+INSERT INTO consultations (appointment_id, symptoms, diagnosis)
+SELECT appointment_id, 'Fever and headache', 'Malaria' FROM appointments
+WHERE doctor_id = 1 AND appointment_date = DATE '2025-06-02' AND appointment_time = TIME '09:00';
+COMMIT;
+SELECT a.appointment_id, a.status, c.diagnosis
+FROM appointments a JOIN consultations c USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+
+-- DEMO 2: ROLLBACK - a card payment is declined, so all changes are undone
+SELECT invoice_id, status, total_amount FROM invoices WHERE invoice_id = 8190;
+BEGIN;
+INSERT INTO payments (invoice_id, amount, payment_method) VALUES (8190, 49986.74, 'Card');
+UPDATE invoices SET status = 'Paid' WHERE invoice_id = 8190;
+SELECT invoice_id, status FROM invoices WHERE invoice_id = 8190;
+ROLLBACK;
+SELECT invoice_id, status FROM invoices WHERE invoice_id = 8190;
+SELECT COUNT(*) AS payments_for_8190 FROM payments WHERE invoice_id = 8190;
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cat >> portfolio-3-transactions-concurrency/transaction-demos.sql << 'EOF'
+
+-- DEMO 3: An error aborts the whole transaction (atomicity)
+-- The second insert tries to double-book Dr 1 at 09:00, which breaks the UNIQUE rule
+BEGIN;
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (2, 1, DATE '2025-06-02', TIME '10:00', 'Scheduled');
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (3, 1, DATE '2025-06-02', TIME '09:00', 'Scheduled');
+SELECT 'this will not run' AS note;
+ROLLBACK;
+SELECT appointment_time, patient_id FROM appointments WHERE appointment_date = DATE '2025-06-02';
+
+-- DEMO 4: SAVEPOINT - keep the valid lab request, undo only the faulty one
+BEGIN;
+INSERT INTO lab_requests (consultation_id, test_id)
+SELECT c.consultation_id, 2 FROM consultations c JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+SAVEPOINT before_second_test;
+INSERT INTO lab_requests (consultation_id, test_id)
+SELECT c.consultation_id, 99 FROM consultations c JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+ROLLBACK TO SAVEPOINT before_second_test;
+COMMIT;
+SELECT lr.request_id, t.test_name FROM lab_requests lr JOIN lab_tests t USING (test_id)
+JOIN consultations c USING (consultation_id) JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+EOF
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % psql -a -d carebridge_clinic -f portfolio-3-transactions-concurrency/transaction-demos.sql > portfolio-3-transactions-concurrency/transaction-demos-output.txt 2>&1
+cat portfolio-3-transactions-concurrency/transaction-demos-output.txt
+-- CareBridge clinic: transaction demonstrations (Portfolio 3, Part A)
+-- Clean up previous demo runs so the script can be rerun
+DELETE FROM appointments WHERE appointment_date >= DATE '2025-06-01';
+DELETE 0
+-- DEMO 1: COMMIT - book an appointment and record its consultation as one unit
+BEGIN;
+BEGIN
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (1, 1, DATE '2025-06-02', TIME '09:00', 'Completed');
+INSERT 0 1
+INSERT INTO consultations (appointment_id, symptoms, diagnosis)
+SELECT appointment_id, 'Fever and headache', 'Malaria' FROM appointments
+WHERE doctor_id = 1 AND appointment_date = DATE '2025-06-02' AND appointment_time = TIME '09:00';
+INSERT 0 1
+COMMIT;
+COMMIT
+SELECT a.appointment_id, a.status, c.diagnosis
+FROM appointments a JOIN consultations c USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+ appointment_id |  status   | diagnosis 
+----------------+-----------+-----------
+          20001 | Completed | Malaria
+(1 row)
+
+-- DEMO 2: ROLLBACK - a card payment is declined, so all changes are undone
+SELECT invoice_id, status, total_amount FROM invoices WHERE invoice_id = 8190;
+ invoice_id | status | total_amount 
+------------+--------+--------------
+       8190 | Unpaid |     49986.74
+(1 row)
+
+BEGIN;
+BEGIN
+INSERT INTO payments (invoice_id, amount, payment_method) VALUES (8190, 49986.74, 'Card');
+INSERT 0 1
+UPDATE invoices SET status = 'Paid' WHERE invoice_id = 8190;
+UPDATE 1
+SELECT invoice_id, status FROM invoices WHERE invoice_id = 8190;
+ invoice_id | status 
+------------+--------
+       8190 | Paid
+(1 row)
+
+ROLLBACK;
+ROLLBACK
+SELECT invoice_id, status FROM invoices WHERE invoice_id = 8190;
+ invoice_id | status 
+------------+--------
+       8190 | Unpaid
+(1 row)
+
+SELECT COUNT(*) AS payments_for_8190 FROM payments WHERE invoice_id = 8190;
+ payments_for_8190 
+-------------------
+                 0
+(1 row)
+
+-- DEMO 3: An error aborts the whole transaction (atomicity)
+-- The second insert tries to double-book Dr 1 at 09:00, which breaks the UNIQUE rule
+BEGIN;
+BEGIN
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (2, 1, DATE '2025-06-02', TIME '10:00', 'Scheduled');
+INSERT 0 1
+INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status)
+VALUES (3, 1, DATE '2025-06-02', TIME '09:00', 'Scheduled');
+psql:portfolio-3-transactions-concurrency/transaction-demos.sql:33: ERROR:  duplicate key value violates unique constraint "appointments_doctor_id_appointment_date_appointment_time_key"
+DETAIL:  Key (doctor_id, appointment_date, appointment_time)=(1, 2025-06-02, 09:00:00) already exists.
+SELECT 'this will not run' AS note;
+psql:portfolio-3-transactions-concurrency/transaction-demos.sql:34: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK;
+ROLLBACK
+SELECT appointment_time, patient_id FROM appointments WHERE appointment_date = DATE '2025-06-02';
+ appointment_time | patient_id 
+------------------+------------
+ 09:00:00         |          1
+(1 row)
+
+-- DEMO 4: SAVEPOINT - keep the valid lab request, undo only the faulty one
+BEGIN;
+BEGIN
+INSERT INTO lab_requests (consultation_id, test_id)
+SELECT c.consultation_id, 2 FROM consultations c JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+INSERT 0 1
+SAVEPOINT before_second_test;
+SAVEPOINT
+INSERT INTO lab_requests (consultation_id, test_id)
+SELECT c.consultation_id, 99 FROM consultations c JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+psql:portfolio-3-transactions-concurrency/transaction-demos.sql:46: ERROR:  insert or update on table "lab_requests" violates foreign key constraint "lab_requests_test_id_fkey"
+DETAIL:  Key (test_id)=(99) is not present in table "lab_tests".
+ROLLBACK TO SAVEPOINT before_second_test;
+ROLLBACK
+COMMIT;
+COMMIT
+SELECT lr.request_id, t.test_name FROM lab_requests lr JOIN lab_tests t USING (test_id)
+JOIN consultations c USING (consultation_id) JOIN appointments a USING (appointment_id)
+WHERE a.appointment_date = DATE '2025-06-02';
+ request_id |       test_name       
+------------+-----------------------
+       5372 | Malaria Parasite Test
+(1 row)
+
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % git add .
+git commit -m "Add transaction demos: commit, rollback, atomicity and savepoint"
+git push
+[main ce8ecd0] Add transaction demos: commit, rollback, atomicity and savepoint
+ 2 files changed, 155 insertions(+)
+ create mode 100644 portfolio-3-transactions-concurrency/transaction-demos-output.txt
+ create mode 100644 portfolio-3-transactions-concurrency/transaction-demos.sql
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 1.86 KiB | 1.86 MiB/s, done.
+Total 5 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 1 local object.
+To https://github.com/Cyber-Fabs/advanced-database-portfolio.git
+   08dd4f4..ce8ecd0  main -> main
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % mkdir -p portfolio-3-transactions-concurrency/screenshots
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % cd ~/Documents/advanced-database-portfolio
+psql -d carebridge_clinic
+psql (18.6 (Postgres.app))
+Type "help" for help.
+
+carebridge_clinic=# \set PROMPT1 'B> '
+B> \set PROMPT1 'B> '
+B> BEGIN;
+BEGIN
+B> INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time) VALUES (20, 2, '2025-06-02', '11:00');
+ERROR:  duplicate key value violates unique constraint "appointments_doctor_id_appointment_date_appointment_time_key"
+DETAIL:  Key (doctor_id, appointment_date, appointment_time)=(2, 2025-06-02, 11:00:00) already exists.
+B> ROLLBACK;
+ROLLBACK
+B> SELECT patient_id, appointment_time FROM appointments WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+ patient_id | appointment_time 
+------------+------------------
+         10 | 11:00:00
+(1 row)
+
+B> UPDATE appointments SET status = 'Cancelled' WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+UPDATE 1
+B> UPDATE appointments SET status = 'Scheduled' WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+UPDATE 1
+B> UPDATE appointments SET status = 'Cancelled' WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+UPDATE 1
+B> UPDATE appointments SET status = 'Cancelled' WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+UPDATE 1
+B> 

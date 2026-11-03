@@ -1,0 +1,137 @@
+Last login: Mon Nov  2 08:25:27 on ttys001
+favour@Fabuyis-MacBook-Air ~ % cd ~/Documents/advanced-database-portfolio
+psql -d carebridge_clinic
+psql (18.6 (Postgres.app))
+Type "help" for help.
+
+carebridge_clinic=# \! clear
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+carebridge_clinic=# BEGIN;
+BEGIN
+carebridge_clinic=*# INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time) VALUES (10, 2, '2025-06-02', '11:00');
+INSERT 0 1
+carebridge_clinic=*# BEGIN;
+WARNING:  there is already a transaction in progress
+BEGIN
+carebridge_clinic=*# INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time) VALUES (20, 2, '2025-06-02', '11:00');
+ERROR:  duplicate key value violates unique constraint "appointments_doctor_id_appointment_date_appointment_time_key"
+DETAIL:  Key (doctor_id, appointment_date, appointment_time)=(2, 2025-06-02, 11:00:00) already exists.
+carebridge_clinic=!# ROLLBACK;
+ROLLBACK
+carebridge_clinic=# \set PROMPT1 'A> '
+A> BEGIN;
+BEGIN
+A> INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time) VALUES (10, 2, '2025-06-02', '11:00');
+INSERT 0 1
+A> \! screencapture -T 5 ~/Documents/advanced-database-portfolio/portfolio-3-transactions-concurrency/screenshots/booking-b-waiting.png
+could not create image from display
+A> COMMIT;
+COMMIT
+A> BEGIN;
+BEGIN
+A> SELECT status FROM appointments WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+  status   
+-----------
+ Scheduled
+(1 row)
+
+A> SELECT status FROM appointments WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+  status   
+-----------
+ Cancelled
+(1 row)
+
+A> COMMIT;
+COMMIT
+A> BEGIN ISOLATION LEVEL REPEATABLE READ;
+BEGIN
+A> SELECT status FROM appointments WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+  status   
+-----------
+ Scheduled
+(1 row)
+
+A> SELECT status FROM appointments WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+  status   
+-----------
+ Scheduled
+(1 row)
+
+A> SELECT status FROM appointments WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+  status   
+-----------
+ Scheduled
+(1 row)
+
+A> COMMIT;
+COMMIT
+A> SELECT status FROM appointments WHERE doctor_id = 2 AND appointment_date = '2025-06-02';
+  status   
+-----------
+ Cancelled
+(1 row)
+
+A> \q
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % ls -ltr ~/Desktop | grep -i screenshot
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % mdfind -onlyin ~ "kMDItemIsScreenCapture == 1" | tail -10
+favour@Fabuyis-MacBook-Air advanced-database-portfolio % 
