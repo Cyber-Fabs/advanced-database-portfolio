@@ -1,0 +1,125 @@
+=== Q1: Full history of one patient in a single read (no joins) ===
+{
+  _id: 'P0001',
+  name: {
+    first: 'Chioma',
+    last: 'Okafor'
+  },
+  visits: [
+    {
+      visit_date: ISODate('2025-03-10T00:00:00.000Z'),
+      diagnosis: 'Malaria'
+    },
+    {
+      visit_date: ISODate('2025-04-22T00:00:00.000Z'),
+      diagnosis: 'Hypertension'
+    }
+  ]
+}
+=== Q2: Patients ever diagnosed with malaria, BEFORE indexing ===
+Before | used index: false | documents examined: 2000 | results: 377 | time (ms): 2
+=== Q2: Same query AFTER a multikey index on visits.diagnosis ===
+After  | used index: true | documents examined: 377 | results: 377 | time (ms): 1
+=== Q3: Most common diagnoses (aggregation pipeline) ===
+{
+  _id: 'Upper respiratory infection',
+  cases: 436
+}
+{
+  _id: 'Gastroenteritis',
+  cases: 420
+}
+{
+  _id: 'Malaria',
+  cases: 409
+}
+{
+  _id: 'Hypertension',
+  cases: 395
+}
+{
+  _id: 'Type 2 diabetes',
+  cases: 388
+}
+{
+  _id: 'Anaemia',
+  cases: 376
+}
+=== Q4: Number of visits handled by each doctor ===
+{
+  _id: 'Dr Fatima Bello',
+  visits: 504
+}
+{
+  _id: 'Dr Ngozi Okafor',
+  visits: 494
+}
+{
+  _id: 'Dr Tunde Adeyemi',
+  visits: 486
+}
+{
+  _id: 'Dr Funmilayo Ojo',
+  visits: 481
+}
+{
+  _id: 'Dr Ibrahim Musa',
+  visits: 459
+}
+=== Q5: Five largest unpaid invoices with patient phone ($lookup = join) ===
+{
+  patient_id: 'P1007',
+  amount: 49981,
+  name: {
+    first: 'Ngozi',
+    last: 'Balogun'
+  },
+  phone: '09050001007'
+}
+{
+  patient_id: 'P0776',
+  amount: 49942,
+  name: {
+    first: 'David',
+    last: 'Nwosu'
+  },
+  phone: '09050000776'
+}
+{
+  patient_id: 'P0103',
+  amount: 49828,
+  name: {
+    first: 'David',
+    last: 'Obi'
+  },
+  phone: '09050000103'
+}
+{
+  patient_id: 'P1554',
+  amount: 49746,
+  name: {
+    first: 'Musa',
+    last: 'Nwosu'
+  },
+  phone: '09050001554'
+}
+{
+  patient_id: 'P0532',
+  amount: 49545,
+  name: {
+    first: 'Aisha',
+    last: 'Eze'
+  },
+  phone: '09050000532'
+}
+=== Q6: Record a new visit with one atomic update ($push) ===
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+P0001 now has 3 visits
+=== Q7: Schema validation rejects an invalid patient ===
+Rejected as expected: Document failed validation
