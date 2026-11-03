@@ -1,0 +1,11 @@
+  table_name   | count 
+---------------+-------
+ patients      |  5000
+ appointments  | 20002
+ consultations | 13470
+ prescriptions |  9500
+ lab_requests  |  5372
+ invoices      | 13469
+ payments      | 10793
+(7 rows)
+

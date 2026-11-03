@@ -10,7 +10,7 @@ CareBridge Specialist Clinic, Abuja (simulated). See [case-study.md](../case-stu
 | `carebridge-clinic-erd.dbml` | Source code of the ER diagram |
 | `carebridge-schema.sql` | PostgreSQL schema: tables, keys and constraints |
 | `carebridge-sample-data.sql` | Generated sample data (5,000 patients, 20,000 appointments) |
-| `screenshots/` | Evidence of the schema and data being created |
+| `tables-created.txt`, `sample-data-counts.txt` | Output evidence of the schema and data being created |
 
 ## ER diagram
 ![CareBridge ER diagram](carebridge-clinic-erd.png)
@@ -51,5 +51,5 @@ The schema is normalised to **Third Normal Form (3NF)**.
     psql -d carebridge_clinic -f carebridge-sample-data.sql
 
 ## Evidence
-![Tables created](screenshots/tables-created.png)
-![Sample data row counts](screenshots/sample-data-counts.png)
+- [Tables created](tables-created.txt): output of the `\dt` command
+- [Sample data row counts](sample-data-counts.txt): 20,002 appointments, including two added during the Portfolio 3 demos

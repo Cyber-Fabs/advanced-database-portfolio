@@ -1,0 +1,17 @@
+                List of tables
+ Schema |        Name        | Type  | Owner  
+--------+--------------------+-------+--------
+ public | appointments       | table | favour
+ public | consultations      | table | favour
+ public | departments        | table | favour
+ public | doctors            | table | favour
+ public | invoices           | table | favour
+ public | lab_requests       | table | favour
+ public | lab_tests          | table | favour
+ public | medications        | table | favour
+ public | patients           | table | favour
+ public | payments           | table | favour
+ public | prescription_items | table | favour
+ public | prescriptions      | table | favour
+(12 rows)
+
