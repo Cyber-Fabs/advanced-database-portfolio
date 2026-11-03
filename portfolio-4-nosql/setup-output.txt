@@ -1,0 +1,71 @@
+patients: 2000
+doctors:  5
+invoices: 3000
+--- Example patient document ---
+{
+  _id: 'P0001',
+  name: {
+    first: 'Chioma',
+    last: 'Okafor'
+  },
+  date_of_birth: ISODate('1988-04-12T00:00:00.000Z'),
+  gender: 'Female',
+  phone: '09050000001',
+  blood_group: 'O+',
+  allergies: [
+    'Penicillin'
+  ],
+  visits: [
+    {
+      visit_date: ISODate('2025-03-10T00:00:00.000Z'),
+      doctor: {
+        doctor_id: 'D001',
+        name: 'Dr Ngozi Okafor'
+      },
+      symptoms: 'Fever and headache',
+      diagnosis: 'Malaria',
+      prescriptions: [
+        {
+          medication: 'Artemether-Lumefantrine',
+          dosage: 'Twice daily',
+          quantity: 6
+        },
+        {
+          medication: 'Paracetamol 500mg',
+          dosage: 'Three times daily',
+          quantity: 9
+        }
+      ],
+      lab_results: [
+        {
+          test: 'Malaria Parasite Test',
+          result: 'Positive',
+          result_date: ISODate('2025-03-10T00:00:00.000Z')
+        }
+      ]
+    },
+    {
+      visit_date: ISODate('2025-04-22T00:00:00.000Z'),
+      doctor: {
+        doctor_id: 'D003',
+        name: 'Dr Tunde Adeyemi'
+      },
+      symptoms: 'Chest pain',
+      diagnosis: 'Hypertension',
+      prescriptions: [
+        {
+          medication: 'Amlodipine 5mg',
+          dosage: 'Once daily',
+          quantity: 30
+        }
+      ],
+      lab_results: [
+        {
+          test: 'Lipid Profile',
+          result: 'Abnormal',
+          result_date: ISODate('2025-04-23T00:00:00.000Z')
+        }
+      ]
+    }
+  ]
+}
